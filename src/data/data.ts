@@ -13,7 +13,7 @@ export type DataOutline = {
     [key: string]: SpellData
 }
 
-export const DATA: DataOutline = {
+export const DATA_: DataOutline = {
     "Aksandria": {
         "Fury of Elune": [
             {

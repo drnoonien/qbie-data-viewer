@@ -1,14 +1,12 @@
 import classNames from 'classnames'
 import React, { useState } from 'react'
-import { Button, Col, Container, Row, Table } from 'reactstrap'
+import { Button, Col, Container, Input, Label, Row, Table } from 'reactstrap'
 import slugify from 'slugify'
-import { DATA, DataOutline, PullData, SpellData } from '../data/data'
+import { DataOutline, PullData, SpellData } from '../data/data'
 
 const STORAGE_KEY = 'qbie-data-viewer'
 
-type AppProps = {
-
-}
+type AppProps = {}
 
 export const App = (props: AppProps): JSX.Element | null => {
 
@@ -23,34 +21,78 @@ export const App = (props: AppProps): JSX.Element | null => {
         }
     })
 
+    const takeEntry = (state: DataOutline, player: string, spell: string): SpellData => {
+        return {
+            [spell]: state[player][spell]
+        }
+    }
+
+    const [margin, setMargin] = useState<number>(5000)
+
+    const [selected, setSelected] = useState<{
+        player: string,
+        spell: string
+    }>(() => {
+
+        if (state) {
+            const [playerName, spellObj] = Object.entries(state)[0]
+            const [spellName] = Object.entries(spellObj)[0]
+
+            return {
+                player: playerName,
+                spell: spellName
+            }
+        }
+
+        return {
+            player: "",
+            spell: ""
+        }
+    })
+
     return (
         <Container className="my-3">
             <Row className="mb-3">
-                <Col className="d-flex align-items-center">
-                    <Button onClick={() => {
-                        const jsonData = prompt('import')
-                        if (jsonData) {
-                            localStorage.setItem(STORAGE_KEY, jsonData)
-                            setState(JSON.parse(jsonData))
-                        }
-
-                    }}>
-                        {"Import"}
-                    </Button>
-                    <span className="ms-2">{`Click on a row to show rows that are offset from it`}</span>
+                <Col>
+                    <div className="d-flex justify-content-between align-items-end border bg-light p-3">
+                        <div className="d-flex align-items-end gap-3 justify-content-start">
+                            <div>
+                                <Label className="mb-1 p-0" size="sm">{"Drift (milli)"}</Label>
+                                <Input type="number" value={margin} style={{ width: 150 }} onChange={(ev) => {
+                                    setMargin(parseInt(ev.target.value))
+                                }} />
+                            </div>
+                            <span>{`Click on a row to show rows that are offset from it`}</span>
+                        </div>
+                        <Button onClick={() => {
+                            const jsonData = prompt('import')
+                            if (jsonData) {
+                                localStorage.setItem(STORAGE_KEY, jsonData)
+                                setState(JSON.parse(jsonData))
+                            }
+                        }}>
+                            {"Import"}
+                        </Button>
+                    </div>
                 </Col>
             </Row>
             {state && (
                 <Row>
                     <Col xs="4">
-                        <Navigation data={state} />
+                        <Navigation
+                            data={state}
+                            selected={selected}
+                            onSelect={(player, spell) => {
+                                setSelected({ player, spell })
+                            }}
+                        />
                     </Col>
                     <Col xs="8">
-                        {Object.keys(DATA).map(entry => {
-                            return (
-                                <PlayerContainer name={entry} spellData={DATA[entry]} />
-                            )
-                        })}
+                        <PlayerContainer
+                            margin={margin}
+                            name={selected.player}
+                            spellData={takeEntry(state, selected.player, selected.spell)}
+                        />
                     </Col>
                 </Row>
             )}
@@ -60,6 +102,11 @@ export const App = (props: AppProps): JSX.Element | null => {
 
 type NavigationProps = {
     data: DataOutline
+    selected: {
+        player: string,
+        spell: string
+    }
+    onSelect: (player: string, spell: string) => void
 }
 
 export const Navigation = (props: NavigationProps): JSX.Element | null => {
@@ -71,8 +118,17 @@ export const Navigation = (props: NavigationProps): JSX.Element | null => {
                 <ul>
                     {Object.keys(props.data[playerName]).map(spellName => {
                         return (
-                            <li>
-                                <a href={`#${slugify(`${playerName}_${spellName}`)}`}>
+                            <li className={classNames({
+                                'fw-bold': (props.selected.player == playerName && props.selected.spell == spellName)
+                            })}>
+                                <a
+                                    style={{ cursor: 'pointer' }}
+                                    className="link"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        props.onSelect(playerName, spellName)
+                                    }}
+                                >
                                     {spellName}
                                 </a>
                             </li>
@@ -84,7 +140,7 @@ export const Navigation = (props: NavigationProps): JSX.Element | null => {
     })
 
     return (
-        <div >
+        <div>
             {"Navigation"}
 
             <ul>
@@ -97,6 +153,7 @@ export const Navigation = (props: NavigationProps): JSX.Element | null => {
 type PlayerContainerProps = {
     name: string
     spellData: SpellData
+    margin: number
 }
 
 export const PlayerContainer = (props: PlayerContainerProps): JSX.Element | null => {
@@ -104,9 +161,12 @@ export const PlayerContainer = (props: PlayerContainerProps): JSX.Element | null
     return (
         <div>
             {Object.keys(props.spellData).map(entry => {
-
                 return (
-                    <SpellTable spell={entry} player={props.name} pullData={props.spellData[entry]} />
+                    <SpellTable
+                        spell={entry}
+                        player={props.name}
+                        pullData={props.spellData[entry]}
+                        margin={props.margin} />
                 )
             })}
         </div>
@@ -117,6 +177,7 @@ type SpellTableProps = {
     player: string
     spell: string
     pullData: PullData[]
+    margin: number
 }
 
 export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
@@ -125,9 +186,15 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
         targets: {
             [pull: string]: number[]
         }
-    }>({
-        targets: {
-            [""]: [0]
+    }>(() => {
+
+        const d = props.pullData[0]
+        const [key, value] = Object.entries(d)[0]
+
+        return {
+            targets: {
+                [key]: value
+            }
         }
     })
 
@@ -165,7 +232,7 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
                 }}
                 className="mt-2"
             >
-                <Table size="sm" bordered responsive>
+                <Table size="sm" bordered style={{ width: 'auto' }}>
                     <thead>
                         <tr>
                             <th className="text-center">
@@ -188,7 +255,8 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
                                             rowSelected(pullCount, item[pullCount])
                                         }}
                                         className={classNames('text-center', {
-                                            'bg-light': state.targets[pullCount] != null,
+                                            'bg-dark': state.targets[pullCount] != null,
+                                            'text-white': state.targets[pullCount] != null,
                                         })}
                                         style={{
                                             cursor: 'pointer'
@@ -203,16 +271,18 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
                                                 return <td />
                                             }
                                             const doColorRow = state.targets[pullCount] == null
-                                            const colorRed = getDiff(Object.values(state.targets)[0][i], data, 4500)
+                                            const colorRed = getDiff(Object.values(state.targets)[0][i], data, props.margin)
                                             return (
                                                 <td className={classNames({
-                                                    'text-danger': ((doColorRow && colorRed)
-                                                    ),
-                                                })}>
-                                                    {Math.round(data / 1000)}
+                                                    'text-black': (doColorRow && colorRed),
+                                                    'bg-danger': (doColorRow && colorRed),
+                                                })
+                                                }>
+                                                    { Math.round(data / 1000)}
                                                 </td>
                                             )
-                                        })}
+                                        })
+                                        }
                                     </tr>
                                 )
                             })
@@ -220,6 +290,6 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
                     </tbody>
                 </Table>
             </div>
-        </div>
+        </div >
     )
 }
