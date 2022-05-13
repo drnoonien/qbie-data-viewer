@@ -113,14 +113,17 @@ export const Navigation = (props: NavigationProps): JSX.Element | null => {
 
     const items = Object.keys(props.data).map(playerName => {
         return (
-            <li>
+            <li key={playerName}>
                 {playerName}
                 <ul>
                     {Object.keys(props.data[playerName]).map(spellName => {
                         return (
-                            <li className={classNames({
-                                'fw-bold': (props.selected.player == playerName && props.selected.spell == spellName)
-                            })}>
+                            <li
+                                key={spellName}
+                                className={classNames({
+                                    'fw-bold': (props.selected.player == playerName && props.selected.spell == spellName)
+                                })}
+                            >
                                 <a
                                     style={{ cursor: 'pointer' }}
                                     className="link"
@@ -163,6 +166,7 @@ export const PlayerContainer = (props: PlayerContainerProps): JSX.Element | null
             {Object.keys(props.spellData).map(entry => {
                 return (
                     <SpellTable
+                        key={`${entry}_${props.name}`}
                         spell={entry}
                         player={props.name}
                         pullData={props.spellData[entry]}
@@ -219,7 +223,6 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
     }
 
     const getDiff = (target: number, value: number, minDelta: number) => {
-
         return Math.abs(target - value) > minDelta
     }
 
@@ -239,17 +242,21 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
                                 {'#'}
                             </th>
                             {[...Array(maxCols)].map((_, i) =>
-                                <th className="text-center">
+                                <th
+                                    key={i}
+                                    className="text-center"
+                                >
                                     {`Use ${i + 1}`}
                                 </th>
                             )}
                         </tr>
                     </thead>
                     <tbody>
-                        {props.pullData.map(item => {
-                            return Object.keys(item).map(pullCount => {
+                        {props.pullData.flatMap(item => {
+                            return Object.keys(item).map((pullCount) => {
                                 return (
                                     <tr
+                                        key={pullCount}
                                         tabIndex={0}
                                         onClick={() => {
                                             rowSelected(pullCount, item[pullCount])
@@ -268,17 +275,20 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
                                         {[...Array(maxCols)].map((_, i) => {
                                             const data = item[pullCount][i]
                                             if (data == null) {
-                                                return <td />
+                                                return <td key={i} />
                                             }
                                             const doColorRow = state.targets[pullCount] == null
                                             const colorRed = getDiff(Object.values(state.targets)[0][i], data, props.margin)
                                             return (
-                                                <td className={classNames({
-                                                    'text-black': (doColorRow && colorRed),
-                                                    'bg-danger': (doColorRow && colorRed),
-                                                })
-                                                }>
-                                                    { Math.round(data / 1000)}
+                                                <td
+                                                    key={i}
+                                                    className={classNames({
+                                                        'text-black': (doColorRow && colorRed),
+                                                        'bg-danger': (doColorRow && colorRed),
+                                                    })
+                                                    }
+                                                >
+                                                    {Math.round(data / 1000)}
                                                 </td>
                                             )
                                         })
