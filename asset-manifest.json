@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/qbie-data-viewer/static/css/main.e7720ab7.css",
+    "main.js": "/qbie-data-viewer/static/js/main.e4af1ad9.js",
+    "index.html": "/qbie-data-viewer/index.html",
+    "main.e7720ab7.css.map": "/qbie-data-viewer/static/css/main.e7720ab7.css.map",
+    "main.e4af1ad9.js.map": "/qbie-data-viewer/static/js/main.e4af1ad9.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e7720ab7.css",
+    "static/js/main.e4af1ad9.js"
+  ]
+}
