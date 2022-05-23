@@ -288,7 +288,7 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
                                                     })
                                                     }
                                                 >
-                                                    {Math.round(data / 1000)}
+                                                    {secondsToTimestamp(Math.round(data / 1000))}
                                                 </td>
                                             )
                                         })
@@ -302,4 +302,12 @@ export const SpellTable = (props: SpellTableProps): JSX.Element | null => {
             </div>
         </div >
     )
+}
+
+function secondsToTimestamp(seconds: number): string {
+    if (seconds < 0) {
+        throw Error(`Seconds cannot be a negative number: ${seconds}`)
+    }
+
+    return new Date(seconds * 1000).toISOString().substr(14, 5)
 }
